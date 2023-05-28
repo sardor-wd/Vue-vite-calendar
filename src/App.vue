@@ -13,7 +13,7 @@
             <div class="day-label">Friday</div>
             <div class="day-label">Saturday</div>
             <div class="day-label">Sunday</div>
-            <div class="day" v-for="day in days" :key="day" @drop="dropEvent(day, $event)" @dragover.prevent>
+            <div class="day" v-for="day in days" :key="day" @drop="dropEvent(day, $event)" @dragover.prevent @click="openAddPopup(day)">
                 <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }">{{ day }}</div>
                 <div class="events">
                     <div class="event" v-for="event in getEventsByDay(day)" :key="event.id" draggable="true"
@@ -27,7 +27,6 @@
         <div class="add-event">
             <button @click="openAddPopup" class="add-button">Add Event</button>
         </div>
-
         <div v-if="showAddPopup" class="popup">
             <div class="popup-content">
                 <h3>Add Event</h3>
@@ -103,8 +102,9 @@ export default {
                 this.currentDate.getFullYear() === currentYear
             );
         },
-        openAddPopup() {
+        openAddPopup(day) {
             this.showAddPopup = true;
+            this.newEventDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day).toISOString().split('T')[0];
         },
         closeAddPopup() {
             this.showAddPopup = false;
@@ -198,6 +198,12 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.day:hover {
+    background-color: #444;
 }
 
 .day-label {
@@ -242,7 +248,7 @@ export default {
 }
 
 .delete-button {
-    background-color: #00bfa5;
+    background-color: #dc3545;
     border: none;
     color: white;
     border-radius: 4px;
