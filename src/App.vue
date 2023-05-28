@@ -13,10 +13,11 @@
             <div class="day-label">Friday</div>
             <div class="day-label">Saturday</div>
             <div class="day-label">Sunday</div>
-            <div class="day" v-for="day in days" :key="day">
+            <div class="day" v-for="day in days" :key="day" @drop="dropEvent(day, $event)" @dragover.prevent>
                 <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }">{{ day }}</div>
                 <div class="events">
-                    <div class="event" v-for="event in getEventsByDay(day)" :key="event.id">
+                    <div class="event" v-for="event in getEventsByDay(day)" :key="event.id" draggable="true"
+                         @dragstart="dragEvent(event.id)">
                         {{ event.title }}
                         <button @click="openDeletePopup(event.id)" class="delete-button">Delete</button>
                     </div>
@@ -30,8 +31,8 @@
         <div v-if="showAddPopup" class="popup">
             <div class="popup-content">
                 <h3>Add Event</h3>
-                <input type="text" v-model="newEventTitle" placeholder="Event title">
-                <input type="date" v-model="newEventDate">
+                <input type="text" v-model="newEventTitle" placeholder="Event title"/>
+                <input type="date" v-model="newEventDate"/>
                 <div class="popup-buttons">
                     <button @click="addEvent" class="confirm-button">Add</button>
                     <button @click="closeAddPopup" class="cancel-button">Cancel</button>
@@ -58,11 +59,7 @@ export default {
     data() {
         return {
             currentDate: new Date(),
-            events: [
-                {id: 1, title: 'Meeting with Client', date: new Date(2023, 4, 15)},
-                {id: 2, title: 'Team Lunch', date: new Date(2023, 4, 20)},
-                {id: 4, title: 'Project Deadline', date: new Date(2023, 4, 28)},
-            ],
+            events: [],
             newEventTitle: '',
             newEventDate: '',
             showAddPopup: false,
@@ -140,6 +137,17 @@ export default {
         clearEventFields() {
             this.newEventTitle = '';
             this.newEventDate = '';
+        },
+        dragEvent(eventId) {
+            event.dataTransfer.setData('text/plain', eventId);
+        },
+        dropEvent(day, event) {
+            const eventId = event.dataTransfer.getData('text/plain');
+            const foundEvent = this.events.find((e) => e.id === eventId);
+
+            if (foundEvent) {
+                foundEvent.date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
+            }
         },
     },
 };
