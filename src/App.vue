@@ -18,7 +18,34 @@
         <div class="events">
           <div class="event" v-for="event in getEventsByDay(day)" :key="event.id">
             {{ event.title }}
+            <button @click="openDeletePopup(event.id)" class="delete-button">Delete</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="add-event">
+      <button @click="openAddPopup" class="add-button">Add Event</button>
+    </div>
+
+    <div v-if="showAddPopup" class="popup">
+      <div class="popup-content">
+        <h3>Add Event</h3>
+        <input type="text" v-model="newEventTitle" placeholder="Event title">
+        <input type="date" v-model="newEventDate">
+        <div class="popup-buttons">
+          <button @click="addEvent" class="confirm-button">Add</button>
+          <button @click="closeAddPopup" class="cancel-button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showDeletePopup" class="popup">
+      <div class="popup-content">
+        <h3>Delete Event</h3>
+        <p>Are you sure you want to delete this event?</p>
+        <div class="popup-buttons">
+          <button @click="deleteEvent" class="confirm-button">Delete</button>
+          <button @click="closeDeletePopup" class="cancel-button">Cancel</button>
         </div>
       </div>
     </div>
@@ -31,7 +58,16 @@ export default {
   data() {
     return {
       currentDate: new Date(),
-      events: [],
+      events: [
+        { id: 1, title: 'Meeting with Client', date: new Date(2023, 4, 15) },
+        { id: 2, title: 'Team Lunch', date: new Date(2023, 4, 20) },
+        { id: 4, title: 'Project Deadline', date: new Date(2023, 4, 28) },
+      ],
+      newEventTitle: '',
+      newEventDate: '',
+      showAddPopup: false,
+      showDeletePopup: false,
+      selectedEventId: null,
     };
   },
   computed: {
@@ -70,15 +106,46 @@ export default {
         this.currentDate.getFullYear() === currentYear
       );
     },
+    openAddPopup() {
+      this.showAddPopup = true;
+    },
+    closeAddPopup() {
+      this.showAddPopup = false;
+      this.clearEventFields();
+    },
+    openDeletePopup(eventId) {
+      this.showDeletePopup = true;
+      this.selectedEventId = eventId;
+    },
+    closeDeletePopup() {
+      this.showDeletePopup = false;
+      this.selectedEventId = null;
+    },
+    addEvent() {
+      if (this.newEventTitle && this.newEventDate) {
+        const newEvent = {
+          id: Math.random().toString(36).substr(2, 9), // Generate a random ID
+          title: this.newEventTitle,
+          date: new Date(this.newEventDate),
+        };
+        this.events.push(newEvent);
+        this.clearEventFields();
+        this.closeAddPopup();
+      }
+    },
+    deleteEvent() {
+      this.events = this.events.filter((event) => event.id !== this.selectedEventId);
+      this.closeDeletePopup();
+    },
+    clearEventFields() {
+      this.newEventTitle = '';
+      this.newEventDate = '';
+    },
   },
 };
 </script>
 
 <style scoped>
-body {
-  background-color: #242424;
-}
-
 .calendar {
   font-family: 'Arial', sans-serif;
   max-width: 900px;
@@ -150,5 +217,86 @@ body {
 
 .day.current-day {
   background-color: #ffcc99;
+}
+
+.add-event {
+  margin-top: 20px;
+}
+
+.add-button {
+  background-color: #00bfa5;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.delete-button{
+    background-color: #00bfa5;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.popup-content {
+    display: flex;
+  flex-direction: column;
+  background-color: #242424;
+  padding: 20px;
+  border-radius: 4px;
+  text-align: center;
+}
+.popup-content input[type="text"],
+.popup-content input[type="date"] {
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #242424;
+  color: white;
+}
+
+.popup h3 {
+  margin-top: 0;
+}
+
+.popup-buttons {
+  margin-top: 20px;
+}
+
+.confirm-button {
+  background-color: #00bfa5;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.cancel-button {
+  background-color: #333;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
