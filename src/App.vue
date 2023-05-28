@@ -309,4 +309,15 @@ export default {
     border-radius: 4px;
     cursor: pointer;
 }
+
+.current-day {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #00bfa5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
 </style>
