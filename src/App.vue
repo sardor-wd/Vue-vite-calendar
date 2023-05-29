@@ -13,7 +13,8 @@
             <div class="day-label">Friday</div>
             <div class="day-label">Saturday</div>
             <div class="day-label">Sunday</div>
-            <div class="day" v-for="day in days" :key="day" @drop="dropEvent(day, $event)" @dragover.prevent @click="openAddPopup(day)">
+            <div class="day" v-for="day in days" :key="day" @drop="dropEvent(day, $event)" @dragover.prevent
+                 @dblclick="openAddPopup(day)">
                 <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }">{{ day }}</div>
                 <div class="events">
                     <div class="event" v-for="event in getEventsByDay(day)" :key="event.id" draggable="true"
@@ -24,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="add-event">
+        <div class="add-event" v-if="!showAddPopup">
             <button @click="openAddPopup" class="add-button">Add Event</button>
         </div>
         <div v-if="showAddPopup" class="popup">
@@ -38,7 +39,6 @@
                 </div>
             </div>
         </div>
-
         <div v-if="showDeletePopup" class="popup">
             <div class="popup-content">
                 <h3>Delete Event</h3>
@@ -54,13 +54,13 @@
 
 <script>
 export default {
-    name: 'Calendar',
+    name: "Calendar",
     data() {
         return {
             currentDate: new Date(),
             events: [],
-            newEventTitle: '',
-            newEventDate: '',
+            newEventTitle: "",
+            newEventDate: "",
             showAddPopup: false,
             showDeletePopup: false,
             selectedEventId: null,
@@ -68,12 +68,23 @@ export default {
     },
     computed: {
         currentMonth() {
-            return this.currentDate.toLocaleString('default', {month: 'long', year: 'numeric'});
+            return this.currentDate.toLocaleString("default", {
+                month: "long",
+                year: "numeric",
+            });
         },
         days() {
             const days = [];
-            const startDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
-            const endDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+            const startDate = new Date(
+                this.currentDate.getFullYear(),
+                this.currentDate.getMonth(),
+                1
+            );
+            const endDate = new Date(
+                this.currentDate.getFullYear(),
+                this.currentDate.getMonth() + 1,
+                0
+            );
             for (let i = startDate.getDate(); i <= endDate.getDate(); i++) {
                 days.push(i);
             }
@@ -82,14 +93,28 @@ export default {
     },
     methods: {
         previousMonth() {
-            this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
+            this.currentDate = new Date(
+                this.currentDate.getFullYear(),
+                this.currentDate.getMonth() - 1,
+                1
+            );
         },
         nextMonth() {
-            this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
+            this.currentDate = new Date(
+                this.currentDate.getFullYear(),
+                this.currentDate.getMonth() + 1,
+                1
+            );
         },
         getEventsByDay(day) {
-            const date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
-            return this.events.filter((event) => event.date.toDateString() === date.toDateString());
+            const date = new Date(
+                this.currentDate.getFullYear(),
+                this.currentDate.getMonth(),
+                day
+            );
+            return this.events.filter(
+                (event) => event.date.toDateString() === date.toDateString()
+            );
         },
         isCurrentDay(day) {
             const currentDate = new Date();
@@ -102,9 +127,17 @@ export default {
                 this.currentDate.getFullYear() === currentYear
             );
         },
-        openAddPopup(day) {
+        openAddPopup(day = null) {
             this.showAddPopup = true;
-            this.newEventDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day).toISOString().split('T')[0];
+            if (day) {
+                this.newEventDate = new Date(
+                    this.currentDate.getFullYear(),
+                    this.currentDate.getMonth(),
+                    day
+                ).toISOString().split('T')[0];
+            } else {
+                this.newEventDate = '';
+            }
         },
         closeAddPopup() {
             this.showAddPopup = false;
@@ -135,18 +168,22 @@ export default {
             this.closeDeletePopup();
         },
         clearEventFields() {
-            this.newEventTitle = '';
-            this.newEventDate = '';
+            this.newEventTitle = "";
+            this.newEventDate = "";
         },
         dragEvent(eventId) {
-            event.dataTransfer.setData('text/plain', eventId);
+            event.dataTransfer.setData("text/plain", eventId);
         },
         dropEvent(day, event) {
-            const eventId = event.dataTransfer.getData('text/plain');
+            const eventId = event.dataTransfer.getData("text/plain");
             const foundEvent = this.events.find((e) => e.id === eventId);
 
             if (foundEvent) {
-                foundEvent.date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
+                foundEvent.date = new Date(
+                    this.currentDate.getFullYear(),
+                    this.currentDate.getMonth(),
+                    day
+                );
             }
         },
     },
@@ -155,7 +192,7 @@ export default {
 
 <style scoped>
 .calendar {
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
     max-width: 900px;
     margin: 0 auto;
     padding: 20px;
@@ -187,7 +224,7 @@ export default {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 
@@ -325,5 +362,17 @@ export default {
     justify-content: center;
     align-items: center;
     color: white;
+}
+
+@media (min-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .day-label {
+        display: none;
+    }
 }
 </style>
