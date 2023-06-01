@@ -133,7 +133,7 @@ export default {
                 this.newEventDate = new Date(
                     this.currentDate.getFullYear(),
                     this.currentDate.getMonth(),
-                    day
+                    day + 1
                 ).toISOString().split('T')[0];
             } else {
                 this.newEventDate = '';
