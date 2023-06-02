@@ -30,6 +30,7 @@
     </div>
     <div class="add-event">
       <button @click="openAddPopup" class="add-button">Add Event</button>
+      <a href="../day.html"><button class="day-button">Day</button></a>
     </div>
     <div v-if="showAddPopup" class="popup">
       <div class="popup-content">
@@ -66,6 +67,7 @@ export default {
     return {
       currentDate: new Date(),
       events: [],
+      time: '00:00',
       newEventTitle: '',
       newEventDate: '',
       showAddPopup: false,
@@ -131,6 +133,7 @@ export default {
       const updatedEvent = {
         id: event.id,
         title: event.title,
+        time: '00:00',
         date: moment(event.date).format('YYYY-MM-DD')
       };
       console.log(updatedEvent);
@@ -152,7 +155,7 @@ export default {
             this.events = response.data.map(event => ({
               id: event.id,
               title: event.title,
-              description: event.description,
+              time: '00:00',
               date: moment(event.date).format('YYYY-MM-DD')
             }));
           })
@@ -163,7 +166,8 @@ export default {
     addEvent() {
       const newEvent = {
         title: this.newEventTitle,
-        date: this.newEventDate
+        date: this.newEventDate,
+        time: '00:00'
       };
       axios
           .post(this.createUrl, newEvent)
@@ -212,6 +216,7 @@ export default {
       this.showAddPopup = false;
       this.newEventTitle = '';
       this.newEventDate = '';
+      this.time = '00:00';
     },
     openDeletePopup(eventId) {
       this.selectedEventId = eventId;
@@ -229,7 +234,11 @@ export default {
             eventDate.getMonth() === this.currentDate.getMonth() &&
             eventDate.getFullYear() === this.currentDate.getFullYear()
         );
-      })
+      }).map((event) => {
+        const eventTime = new Date(event.date).toLocaleTimeString();
+        event.key = event.id + '-' + eventTime;
+        return event;
+      });
     },
   }
 };
@@ -316,10 +325,21 @@ export default {
 }
 
 .add-event {
+  display: flex;
+  gap: 10px;
   margin-top: 20px;
 }
 
 .add-button {
+  background-color: #00bfa5;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.day-button {
   background-color: #00bfa5;
   border: none;
   color: white;
@@ -408,6 +428,7 @@ export default {
   align-items: center;
   color: white;
 }
+
 .white-btn {
   color: black !important;
 }

@@ -356,7 +356,7 @@ export default {
 }
 
 .timetable {
-  max-height: 55vh;
+  max-height: 65vh;
   overflow-y: auto;
 }
 
