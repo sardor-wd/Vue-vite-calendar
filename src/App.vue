@@ -15,7 +15,8 @@
       <div class="day-label">Sunday</div>
 
       <div class="day" v-for="day in days" :key="day" @dragover="onDragOver" @drop="onDrop($event, day)">
-        <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }" @dblclick="openAddPopup(day)">
+        <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }" @dblclick="openAddPopup(day)"
+             @dragend="onDragEnd">
           {{ day }}
         </div>
         <div class="events" @dragover="onDragOver" @drop="onDrop($event, day)">
@@ -57,7 +58,7 @@
 
 <script>
 import axios from 'axios';
-import moment from "moment/moment.js";
+import moment from 'moment';
 
 export default {
   name: 'Calendar',
@@ -122,13 +123,13 @@ export default {
             this.currentDate.getMonth(),
             day
         );
-        this.updateEvent(eventObj);
+        this.updateEvent(eventObj); // Call the updateEvent method
       }
     },
     onDragOver(event) {
-      console.log('Drag over');
       event.preventDefault();
     },
+
     onDragEnd() {
       this.isDragging = false;
     },
@@ -136,36 +137,30 @@ export default {
       const updatedEvent = {
         id: event.id,
         title: event.title,
-        date: event.date
+        date: moment(event.date).format('YYYY-MM-DD')
       };
+      console.log(updatedEvent);
 
       axios
-          .put(`${this.updateUrl}${event.id}`, updatedEvent)
-          .then((response) => {
+          .put(`${this.updateUrl}${event.id}/`, updatedEvent)
+          .then(response => {
             console.log(response.data.message);
-            this.fetchEvents();
+            this.fetchEvents(); // Fetch updated events after successful update
           })
-          .catch((error) => {
+          .catch(error => {
             console.error(error);
           });
     },
     fetchEvents() {
-      axios.get(this.apiUrl)
+      axios
+          .get(this.apiUrl)
           .then(response => {
-            this.events = response.data.map((event, index) => {
-              const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-              const isValidDate = dateRegex.test(event.date);
-
-              if (isValidDate) {
-                const formattedDate = moment(event.date).format('YYYY-MM-DD'); // Форматирование даты с помощью moment.js
-                return {
-                  id: index.toString(),
-                  title: event.title,
-                  description: event.description,
-                  date: formattedDate
-                };
-              }
-            }).filter(Boolean);
+            this.events = response.data.map(event => ({
+              id: event.id,
+              title: event.title,
+              description: event.description,
+              date: moment(event.date).format('YYYY-MM-DD')
+            }));
           })
           .catch(error => {
             console.error('Error fetching events:', error);
