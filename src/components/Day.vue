@@ -89,17 +89,19 @@ export default {
       event.preventDefault();
     },
     onDragStart(event, eventObj) {
-      event.dataTransfer.setData("text/plain", eventObj.id);
+      event.dataTransfer.setData("text/plain", JSON.stringify(eventObj));
+      event.dataTransfer.setData("timeSlot", eventObj.time);
     },
     onDrop(event, timeSlot) {
       event.preventDefault();
-      const eventId = event.dataTransfer.getData("text/plain");
-      const eventObj = this.events.find((event) => event.id === eventId);
+      const eventData = event.dataTransfer.getData("text/plain");
+      const eventObj = JSON.parse(eventData);
 
       if (eventObj) {
-        const updatedEvent = {...eventObj, time: timeSlot};
-        this.updateEvent(updatedEvent);
+        eventObj.time = timeSlot;
+        this.updateEvent(eventObj);
       }
+      console.log(eventObj);
     },
     openDeletePopup(eventId) {
       this.selectedEventId = eventId;
@@ -154,7 +156,6 @@ export default {
             if (updatedEvent) {
               updatedEvent.time = event.time;
             }
-            this.closeEditPopup();
           })
           .catch((error) => {
             console.error('Error updating event:', error);
