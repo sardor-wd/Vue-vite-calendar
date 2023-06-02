@@ -1,14 +1,14 @@
 <template>
-  <div class="calendar">
+  <div class="calendar" style="margin-top: 50px">
     <div class="header">
       <button @click="previousDay" class="navigation-button">Previous</button>
       <h2 class="current-day">{{ getCurrentDayFormatted() }}</h2>
       <button @click="nextDay" class="navigation-button">Next</button>
     </div>
-    <div class="timetable">
+    <div class="timetable" :class="{ 'scrollable': shouldScroll }">
       <div class="time-label">Time</div>
       <div class="time-slot" v-for="timeSlot in timeSlots" :key="timeSlot" @dragover="onDragOver($event)"
-           @drop="onDrop($event, timeSlot)">
+           @drop="onDrop($event, timeSlot)" @dblclick="openAddPopup(timeSlot)">
         <div class="time">{{ timeSlot }}</div>
         <div class="event-container">
           <div class="event" v-for="event in getEventsByTime(timeSlot)" :key="event.id" draggable="true"
@@ -54,18 +54,30 @@ export default {
   data() {
     return {
       currentDay: new Date(),
-      timeSlots: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+      timeSlots: [],
       events: [],
       newEventTitle: "",
       newEventTime: "",
       showAddPopup: false,
       showDeletePopup: false,
       selectedEventId: null,
+      shouldScroll: false,
       apiUrl: "http://127.0.0.1:8000/api/events/",
       deleteUrl: "http://127.0.0.1:8000/api/events/delete/",
       createUrl: "http://127.0.0.1:8000/api/events/create/",
       updateUrl: "http://127.0.0.1:8000/api/events/update/",
     };
+  },
+  created() {
+    const startTime = new Date();
+    startTime.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 96; i++) {
+      const time = new Date(startTime.getTime() + i * 15 * 60 * 1000);
+      const hours = String(time.getHours()).padStart(2, "0");
+      const minutes = String(time.getMinutes()).padStart(2, "0");
+      this.timeSlots.push(`${hours}:${minutes}`);
+    }
   },
   methods: {
     getCurrentDayFormatted() {
@@ -107,32 +119,35 @@ export default {
       this.selectedEventId = eventId;
       this.showDeletePopup = true;
     },
+    addEvent() {
+      const newEvent = {
+        title: this.newEventTitle,
+        time: this.newEventTime,
+        date: this.currentDay.toISOString().split("T")[0],
+      };
+      axios
+          .post(this.createUrl, newEvent)
+          .then((response) => {
+            this.events.push(response.data);
+            this.checkScroll();
+            this.closeAddPopup();
+          })
+          .catch((error) => {
+            console.error('Error creating event:', error);
+          });
+    },
+
     deleteEvent(eventId) {
       const deleteUrl = this.deleteUrl + eventId;
       axios
           .delete(deleteUrl)
           .then(() => {
             this.events = this.events.filter((event) => event.id !== eventId);
+            this.checkScroll();
             this.closeDeletePopup();
           })
           .catch((error) => {
             console.error('Error deleting event:', error);
-          });
-    },
-    addEvent() {
-      const newEvent = {
-        title: this.newEventTitle,
-        time: this.newEventTime,
-        date: this.currentDay.toISOString().split("T")[0], // Set the date to the currentDay value
-      };
-      axios
-          .post(this.createUrl, newEvent)
-          .then((response) => {
-            this.events.push(response.data);
-            this.closeAddPopup();
-          })
-          .catch((error) => {
-            console.error('Error creating event:', error);
           });
     },
     closeDeletePopup() {
@@ -161,12 +176,17 @@ export default {
             console.error('Error updating event:', error);
           });
     },
+    checkScroll() {
+      const timetable = document.querySelector('.timetable');
+      this.shouldScroll = timetable.scrollHeight > 500;
+    },
   },
   mounted() {
     axios
         .get(this.apiUrl)
         .then((response) => {
           this.events = response.data;
+          this.checkScroll();
         })
         .catch((error) => {
           console.error('Error fetching events:', error);
@@ -204,6 +224,7 @@ export default {
 
 .event-container {
   display: flex;
+  gap: 10px;
   align-items: center;
   margin-left: 10px;
 }
@@ -333,6 +354,77 @@ export default {
   margin-bottom: 5px;
   width: 100%;
 }
+
+.timetable {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
 </style>
 
+<style scoped>
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #242424;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Для Firefox */
+::-moz-scrollbar {
+  width: 8px;
+}
+
+::-moz-scrollbar-track {
+  background-color: #242424;
+}
+
+::-moz-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+::-moz-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Дополнительные стили для компонента */
+.timetable.scrollable {
+  overflow-y: scroll;
+}
+
+.timetable.scrollable::-webkit-scrollbar-track {
+  background-color: #333;
+}
+
+.timetable.scrollable::-webkit-scrollbar-thumb {
+  background-color: #666;
+}
+
+.timetable.scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: #888;
+}
+
+.timetable.scrollable::-moz-scrollbar-track {
+  background-color: #333;
+}
+
+.timetable.scrollable::-moz-scrollbar-thumb {
+  background-color: #666;
+}
+
+.timetable.scrollable::-moz-scrollbar-thumb:hover {
+  background-color: #888;
+}
+</style>
 
