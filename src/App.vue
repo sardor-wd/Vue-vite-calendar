@@ -14,9 +14,8 @@
       <div class="day-label">Saturday</div>
       <div class="day-label">Sunday</div>
 
-      <div class="day" v-for="day in days" :key="day" @dragover="onDragOver" @drop="onDrop($event, day)">
-        <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }" @dblclick="openAddPopup(day)"
-             @dragend="onDragEnd">
+      <div class="day" v-for="day in days" :key="day" @dragover="onDragOver" @drop="onDrop($event, day)" @dblclick="openAddPopup(day)">
+        <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }" @dragend="onDragEnd">
           {{ day }}
         </div>
         <div class="events" @dragover="onDragOver" @drop="onDrop($event, day)">
@@ -110,26 +109,20 @@ export default {
   methods: {
     onDragStart(event) {
       const eventId = event.target.getAttribute('data-id');
-      console.log('Dragging event:', eventId);
       event.dataTransfer.setData('text/plain', eventId);
     },
     onDrop(event, day) {
       event.preventDefault();
       const eventId = event.dataTransfer.getData('text/plain');
-      const eventObj = this.events.find(event => event.id === eventId);
+      const eventObj = this.events.find(event => event.id === +eventId);
       if (eventObj) {
-        eventObj.date = new Date(
-            this.currentDate.getFullYear(),
-            this.currentDate.getMonth(),
-            day
-        );
-        this.updateEvent(eventObj); // Call the updateEvent method
+        eventObj.date = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day);
+        this.updateEvent(eventObj);
       }
     },
     onDragOver(event) {
       event.preventDefault();
     },
-
     onDragEnd() {
       this.isDragging = false;
     },
@@ -142,10 +135,10 @@ export default {
       console.log(updatedEvent);
 
       axios
-          .put(`${this.updateUrl}${event.id}/`, updatedEvent)
+          .put(`${this.updateUrl}${event.id}`, updatedEvent)
           .then(response => {
             console.log(response.data.message);
-            this.fetchEvents(); // Fetch updated events after successful update
+            this.fetchEvents();
           })
           .catch(error => {
             console.error(error);
@@ -165,30 +158,6 @@ export default {
           .catch(error => {
             console.error('Error fetching events:', error);
           });
-    },
-    isCurrentDay(day) {
-      const today = new Date();
-      return (
-          this.currentDate.getFullYear() === today.getFullYear() &&
-          this.currentDate.getMonth() === today.getMonth() &&
-          day === today.getDate()
-      );
-    },
-    previousMonth() {
-      this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-      this.fetchEvents();
-    },
-    nextMonth() {
-      this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-      this.fetchEvents();
-    },
-    openAddPopup(day) {
-      this.showAddPopup = true;
-    },
-    closeAddPopup() {
-      this.showAddPopup = false;
-      this.newEventTitle = '';
-      this.newEventDate = '';
     },
     addEvent() {
       const newEvent = {
@@ -217,6 +186,30 @@ export default {
           .catch((error) => {
             console.error(error);
           });
+    },
+    isCurrentDay(day) {
+      const today = new Date();
+      return (
+          this.currentDate.getFullYear() === today.getFullYear() &&
+          this.currentDate.getMonth() === today.getMonth() &&
+          day === today.getDate()
+      );
+    },
+    previousMonth() {
+      this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+      this.fetchEvents();
+    },
+    nextMonth() {
+      this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+      this.fetchEvents();
+    },
+    openAddPopup(day) {
+      this.showAddPopup = true;
+    },
+    closeAddPopup() {
+      this.showAddPopup = false;
+      this.newEventTitle = '';
+      this.newEventDate = '';
     },
     openDeletePopup(eventId) {
       this.selectedEventId = eventId;
