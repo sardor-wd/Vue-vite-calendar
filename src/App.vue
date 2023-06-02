@@ -28,7 +28,7 @@
       </div>
     </div>
     <div class="add-event">
-      <button @click="openAddPopup(null)" class="add-button">Add Event</button>
+      <button @click="openAddPopup" class="add-button">Add Event</button>
     </div>
     <div v-if="showAddPopup" class="popup">
       <div class="popup-content">
@@ -57,6 +57,7 @@
 
 <script>
 import axios from 'axios';
+import moment from "moment/moment.js";
 
 export default {
   name: 'Calendar',
@@ -106,31 +107,22 @@ export default {
     this.fetchEvents();
   },
   methods: {
-    moveEvent(eventId, newDate) {
-      const eventObj = this.events.find(event => event.id === eventId);
-      if (eventObj) {
-        const updatedEvent = {
-          ...eventObj,
-          date: new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate())
-        };
-        this.updateEvent(updatedEvent);
-      }
-    },
     onDragStart(event) {
-      const eventId = event.target.dataset.id;
+      const eventId = event.target.getAttribute('data-id');
       console.log('Dragging event:', eventId);
       event.dataTransfer.setData('text/plain', eventId);
     },
     onDrop(event, day) {
-      console.log('Dropped')
+      event.preventDefault();
       const eventId = event.dataTransfer.getData('text/plain');
       const eventObj = this.events.find(event => event.id === eventId);
       if (eventObj) {
-        const updatedEvent = {
-          ...eventObj,
-          date: new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day)
-        };
-        this.updateEvent(updatedEvent);
+        eventObj.date = new Date(
+            this.currentDate.getFullYear(),
+            this.currentDate.getMonth(),
+            day
+        );
+        this.updateEvent(eventObj);
       }
     },
     onDragOver(event) {
@@ -144,11 +136,11 @@ export default {
       const updatedEvent = {
         id: event.id,
         title: event.title,
-        date: event.date.toISOString().split('T')[0] // Convert date to string format
+        date: event.date
       };
 
       axios
-          .put(`${this.updateUrl}/${event.id}`, updatedEvent)
+          .put(`${this.updateUrl}${event.id}`, updatedEvent)
           .then((response) => {
             console.log(response.data.message);
             this.fetchEvents();
@@ -158,16 +150,25 @@ export default {
           });
     },
     fetchEvents() {
-      axios
-          .get(this.apiUrl)
-          .then((response) => {
-            this.events = response.data.map((event) => ({
-              ...event,
-              date: new Date(event.date)
-            }));
+      axios.get(this.apiUrl)
+          .then(response => {
+            this.events = response.data.map((event, index) => {
+              const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+              const isValidDate = dateRegex.test(event.date);
+
+              if (isValidDate) {
+                const formattedDate = moment(event.date).format('YYYY-MM-DD'); // Форматирование даты с помощью moment.js
+                return {
+                  id: index.toString(),
+                  title: event.title,
+                  description: event.description,
+                  date: formattedDate
+                };
+              }
+            }).filter(Boolean);
           })
-          .catch((error) => {
-            console.error(error);
+          .catch(error => {
+            console.error('Error fetching events:', error);
           });
     },
     isCurrentDay(day) {
@@ -186,7 +187,7 @@ export default {
       this.currentDate.setMonth(this.currentDate.getMonth() + 1);
       this.fetchEvents();
     },
-    openAddPopup() {
+    openAddPopup(day) {
       this.showAddPopup = true;
     },
     closeAddPopup() {
