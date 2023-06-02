@@ -408,6 +408,9 @@ export default {
   align-items: center;
   color: white;
 }
+.white-btn {
+  color: black !important;
+}
 
 @media (min-width: 768px) {
   .calendar-grid {
