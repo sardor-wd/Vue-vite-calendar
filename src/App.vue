@@ -14,7 +14,8 @@
       <div class="day-label">Saturday</div>
       <div class="day-label">Sunday</div>
 
-      <div class="day" v-for="day in days" :key="day" @dragover="onDragOver" @drop="onDrop($event, day)" @dblclick="openAddPopup(day)">
+      <div class="day" v-for="day in days" :key="day" @dragover="onDragOver" @drop="onDrop($event, day)"
+           @dblclick="openAddPopup(day)">
         <div class="day-number" :class="{ 'current-day': isCurrentDay(day) }" @dragend="onDragEnd">
           {{ day }}
         </div>
@@ -204,6 +205,7 @@ export default {
       this.fetchEvents();
     },
     openAddPopup(day) {
+      this.newEventDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day + 1).toISOString().substr(0, 10);
       this.showAddPopup = true;
     },
     closeAddPopup() {
